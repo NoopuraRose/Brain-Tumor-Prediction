@@ -1,12 +1,21 @@
-from ultralytics import YOLO 
+from pathlib import Path
 
-model_name = "runs/classify/train/weights/best.pt"
-test_file = "test_file.jpeg"
+from ultralytics import YOLO
 
-model = YOLO(model_name)
 
-result = model(test_file)
-data = result[0]
-label = data.names[data.probs.top1] 
-conf = data.probs.top1conf.item() 
-print(f"{label} ({conf:.2%})")
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "runs" / "classify" / "train" / "weights" / "best.pt"
+model = YOLO(str(MODEL_PATH))
+
+
+def predict_image(image_path: str | Path) -> tuple[str, float]:
+	"""Classify an MRI image and return its label and confidence."""
+	result = model(str(image_path))[0]
+	label = result.names[result.probs.top1]
+	confidence = result.probs.top1conf.item()
+	return label, confidence
+
+
+if __name__ == "__main__":
+	label, confidence = predict_image(BASE_DIR / "test_file.jpeg")
+	print(f"{label} ({confidence:.2%})")
